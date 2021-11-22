@@ -51,7 +51,7 @@ CURRENT_MINER_VERSION = "2.0.0.0"
 
 ## PUBLIC RPC SERVER
 ## THIS CAN WORK SLOWLY OR BE OUT OF SERVICE SOMETIMES!
-RPC_URL = "https://ocv.mergedpools.com/ovcrpc.php"
+RPC_URL = "https://ocv.mergedpools.com/ocvrpc.php"
 RPC_USER = "NOT REQUIRED" 
 RPC_PASS = "NOT REQUIRED" 
 
@@ -421,7 +421,7 @@ def rpc(method, params=None, addr="", pool_addr="", stlx_addr=""):
     rpc_id = random.getrandbits(32)
     data = json.dumps({"id": rpc_id, "method": method, "params": params}).encode()
 
-    if RPC_URL == "https://ocv.mergedpools.com/ovcrpc.php":
+    if RPC_URL == "https://ocv.mergedpools.com/ocvrpc.php":
         if method == "getblocktemplate" or method == "getbestblockhash":
             request = urllib.request.Request(RPC_URL+"?method="+method)
         else:
@@ -458,7 +458,7 @@ def rpc(method, params=None, addr="", pool_addr="", stlx_addr=""):
         print ("RPC server is too busy or not working properly.")
         exit()
 
-    if RPC_URL != "https://ocv.mergedpools.com/ovcrpc.php" and response['id'] != rpc_id:
+    if RPC_URL != "https://ocv.mergedpools.com/ocvrpc.php" and response['id'] != rpc_id:
         raise ValueError("Invalid response id: got {}, expected {:u}".format(response['id'], rpc_id))
     elif response['error'] is not None:
         raise ValueError("RPC error: {:s}".format(json.dumps(response['error'])))
