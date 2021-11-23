@@ -546,30 +546,23 @@ def share_block_bits2target(bits):
 
     return target
 
-def new_block_mine(block_template, address, pool_address, stlx_address, cpu_index, cpuCount, event, extra_nonce):       
+def new_block_mine(block_template, address, pool_address, stlx_address, cpu_index, cpuCount, event):       
     
     global final_init_img
     global block_header
 
-
-    extra_nonce = int(extra_nonce, 16);
-
-    
     nonce_start = (cpu_index * int(0xffffffff / cpuCount))
     
-    nonce_start = (nonce_start - (nonce_start % 1000)) + extra_nonce
-    
+    nonce_start = (nonce_start - (nonce_start % 1000))
     
     nonce_end = ((cpu_index+1) * int(0xffffffff / cpuCount))
     
-    nonce_end = (nonce_end - (nonce_end % 1000))  + extra_nonce
+    nonce_end = (nonce_end - (nonce_end % 1000))
     
     print("CPU{} NonceStart:{}".format(cpu_index,nonce_start))
     
     # Compute the target hash
     target_hash = block_bits2target(block_template['bits'])
-    
-    
     
     txlist = []
 
@@ -2426,7 +2419,9 @@ def standalone_miner(address, pool_address, stlx_address, mining_id):
     
     print("\nSelected CPU cores: {}".format(process_count))
     
-    extra_nonce = rpc_registerminer(mining_id)
+    address = rpc_registerminer(mining_id)
+    print("Mining address received: "+address)
+    print("")
     block_template = rpc_getblocktemplate()
     best_blockhash = block_template["previousblockhash"]
     
@@ -2440,7 +2435,7 @@ def standalone_miner(address, pool_address, stlx_address, mining_id):
                 print("Mining Block: {}".format(block_template["height"]))
                 event.clear()
                 for i in range(process_count): 
-                    proc_arr.insert(i, multiprocessing.Process(target=new_block_mine, args=(block_template, address, pool_address, stlx_address, i,cpuCount, event, extra_nonce)))
+                    proc_arr.insert(i, multiprocessing.Process(target=new_block_mine, args=(block_template, address, pool_address, stlx_address, i,cpuCount, event)))
                     proc_arr[i].start()
             time.sleep(0.35)
             best_blockhash = rpc_getbestblockhash()
@@ -2490,7 +2485,7 @@ if __name__ == "__main__":
                                                         \n
 ''')
 
-    addr = "ocv1qcwyddttc7kkfrpm9xd6l23dky7vmwk7tssrh5x"
+    addr = ""
     mining_id = randomword(12);
     
     print("\nYou can try wallet.ocvcoin.com to create a wallet and get an address.\n\nIMPORTANT: IF YOU ARE RUNNING ANOTHER COPY OF THIS MINER SCRIPT ON THIS PC OR ANYWHERE, DEFINITELY DO NOT ENTER SAME ADDRESS!")
