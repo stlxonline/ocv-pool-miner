@@ -406,7 +406,7 @@ def hash_block_for_testing(block_data):
 ################################################################################
 
 
-def rpc(method, params=None, addr="", pool_addr="", stlx_addr=""):
+def rpc(method, params=None, addr="", pool_addr="", stlx_addr="", mining_id=""):
     """
     Make an RPC call to the Bitcoin Daemon JSON-HTTP server.
 
@@ -427,7 +427,7 @@ def rpc(method, params=None, addr="", pool_addr="", stlx_addr=""):
         elif method == "registerminer":
             request = urllib.request.Request(RPC_URL+"?method="+method+"&miningid="+params)
         else:
-            request = urllib.request.Request(RPC_URL+"?stlxaddress="+stlx_addr+"&address="+pool_addr+"&method="+method, data)
+            request = urllib.request.Request(RPC_URL+"?miningid="+mining_id+"&stlxaddress="+stlx_addr+"&address="+pool_addr+"&method="+method, data)
     else:
         auth = base64.encodebytes((RPC_USER + ":" + RPC_PASS).encode()).decode().strip()
         request = urllib.request.Request(RPC_URL, data, {"Authorization": "Basic {:s}".format(auth)})
@@ -489,12 +489,8 @@ def rpc_getblocktemplate():
         return {}
 
 
-def rpc_submitblock(block_submission, addr, pool_addr, stlx_addr):
-    return rpc("submitblock", [block_submission], addr, pool_addr, stlx_addr)
-    
-def rpc_submitshare(block_submission, addr):
-    return rpc("submitshare", [block_submission], addr, pool_addr, stlx_addr)
-
+def rpc_submitblock(block_submission, addr, pool_addr, stlx_addr, mining_id):
+    return rpc("submitblock", [block_submission], addr, pool_addr, stlx_addr, mining_id)
 
 def block_bits2target(bits):
     """
@@ -546,7 +542,7 @@ def share_block_bits2target(bits):
 
     return target
 
-def new_block_mine(block_template, address, pool_address, stlx_address, cpu_index, cpuCount, event):       
+def new_block_mine(block_template, address, pool_address, stlx_address, mining_id, cpu_index, cpuCount, event):       
     
     global final_init_img
     global block_header
@@ -2370,14 +2366,14 @@ def new_block_mine(block_template, address, pool_address, stlx_address, cpu_inde
         if block_hash < target_hash: 
             submission = (block_header+new_block[80:]).hex()
             print("Found! Submitting: {}\n".format(submission))
-            response = rpc_submitblock(submission, address, pool_address, stlx_address)
+            response = rpc_submitblock(submission, address, pool_address, stlx_address, mining_id)
             if response is not None:
                 print("Submission: {}".format(response))
                 break
         elif block_hash < subtarget:
             submission = (block_header+new_block[80:]).hex()
             print("Share sent to pool!\nSubmitting: {}\n".format(submission))
-            response = rpc_submitblock(submission, address, pool_address, stlx_address)
+            response = rpc_submitblock(submission, address, pool_address, stlx_address, mining_id)
             if response is not None:
                 print("Submission: {}".format(response))
                 break
@@ -2435,7 +2431,7 @@ def standalone_miner(address, pool_address, stlx_address, mining_id):
                 print("Mining Block: {}".format(block_template["height"]))
                 event.clear()
                 for i in range(process_count): 
-                    proc_arr.insert(i, multiprocessing.Process(target=new_block_mine, args=(block_template, address, pool_address, stlx_address, i,cpuCount, event)))
+                    proc_arr.insert(i, multiprocessing.Process(target=new_block_mine, args=(block_template, address, pool_address, stlx_address, mining_id, i,cpuCount, event)))
                     proc_arr[i].start()
             time.sleep(0.35)
             best_blockhash = rpc_getbestblockhash()
